@@ -1,0 +1,123 @@
+{
+  "name": "Topic5_Expressions_Assessment",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        0
+      ],
+      "id": "1bf3219b-1e62-4e22-9e27-77e06114f5eb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2190516c-9d12-4bcf-9bff-96fa612a1ef0",
+              "name": "firstName",
+              "value": "john",
+              "type": "string"
+            },
+            {
+              "id": "89e3c367-8b3d-4c7f-9d54-7397f870c309",
+              "name": "lastName",
+              "value": "smith",
+              "type": "string"
+            },
+            {
+              "id": "7a9c6b1a-ef0e-4989-beb5-7a397828c4a4",
+              "name": "birthDate",
+              "value": "1998-04-12T08:30:00Z",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "a1939a52-9bf4-40cc-a5be-23b0c85f2441",
+      "name": "Generate Employee Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "245e1c6f-db94-480b-b146-8f19aed80121",
+              "name": "fullNameUpperCase",
+              "value": "={{ ($json.firstName + ' ' + $json.lastName).toUpperCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "0b240ff0-32c1-46a9-914e-1f6eddaf3745",
+              "name": "formattedBirthDate",
+              "value": "={{ DateTime.fromISO($json.birthDate).toFormat('MMMM dd, yyyy') }}",
+              "type": "string"
+            },
+            {
+              "id": "44281834-27f9-4a51-82c3-51f4965a45b3",
+              "name": "processedDate",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        192,
+        0
+      ],
+      "id": "ac6d7ccf-2810-4dcd-aac9-ec7f4ca3d53a",
+      "name": "Process Expressions"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Generate Employee Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Employee Data": {
+      "main": [
+        [
+          {
+            "node": "Process Expressions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d11af30d-e6e0-42a1-9652-9414ec55d112",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "5uu7XMsvJ9474MZk",
+  "tags": []
+}
