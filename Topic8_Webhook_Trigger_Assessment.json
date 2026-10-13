@@ -1,0 +1,82 @@
+{
+  "name": "Topic8_Webhook_Trigger_Assessment",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contact-form",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b0bef4b2-36fb-4daa-bf85-d253c06c2a60",
+      "name": "Webhook",
+      "webhookId": "072532da-aa60-4aef-8353-aa8682c4a87f"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e37803de-23af-4f79-a659-de2fe4d797e4",
+              "name": "customerName",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "bd67cbe6-2ff9-42bc-a1c6-b919cac20a98",
+              "name": "customerEmail",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "4024d385-e72b-48f0-a47c-1919e5987458",
+              "name": "customerMessage",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "462dce73-4c3f-4a10-bbab-3d87ba955ef9",
+      "name": "Process Webhook Data"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Webhook Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "97ef23a4-b0dc-4233-866a-84da978d8e19",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "8kByetFEUHs8kq9Y",
+  "tags": []
+}
