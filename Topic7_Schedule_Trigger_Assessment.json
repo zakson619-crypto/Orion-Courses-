@@ -1,0 +1,83 @@
+{
+  "name": "Topic7_Schedule_Trigger_Assessment",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            },
+            {
+              "field": "cronExpression",
+              "expression": "30 8 * * 1-5"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -336,
+        0
+      ],
+      "id": "b50979e0-d418-438a-ad9f-51c4eb086de9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcd1f456-cbe9-4096-b412-fd5a44d1c26b",
+              "name": "=executionTime",
+              "value": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            },
+            {
+              "id": "b8acacd6-3572-4d6d-86ac-0fdcb90392e0",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "99690820-dfc6-4f3c-9963-0d51263f7207",
+      "name": "Log Execution"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "703ae4d0-26b0-46fa-8700-9e6eb4ddf5e8",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "eGxjlaZcLCq7uT8E",
+  "tags": []
+}
