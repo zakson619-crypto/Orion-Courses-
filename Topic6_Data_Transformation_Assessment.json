@@ -1,0 +1,123 @@
+{
+  "name": "Topic6_Data_Transformation_Assessment",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -32
+      ],
+      "id": "3fe9210f-ae7a-4b23-b9b1-935c284eff36",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "edd6d4af-7ce5-4563-9836-85a090ae46cb",
+              "name": "Raw_Name",
+              "value": "jane doe",
+              "type": "string"
+            },
+            {
+              "id": "65a0445d-19eb-42bb-b108-2209ca5543b8",
+              "name": "contact_email",
+              "value": "Jane@Example.COM",
+              "type": "string"
+            },
+            {
+              "id": "6d675e37-e324-44f6-a379-0731438ff98d",
+              "name": "phone_number",
+              "value": "123-456-7890",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -144,
+        -32
+      ],
+      "id": "d1c97c16-02ca-45b6-8108-2dbf9fb0caa3",
+      "name": "Raw Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "81c1b088-3b22-43db-8725-1a9a25c20fef",
+              "name": "cleanName",
+              "value": "={{ $json.Raw_Name.trim().toUpperCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "06370d6f-0275-4936-a710-b312a99e479d",
+              "name": "cleanEmail",
+              "value": "={{ $json.contact_email.trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "7052342f-a72a-4dde-83ad-ee234493de25",
+              "name": "cleanPhone",
+              "value": "={{ $json.phone_number.trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        80,
+        -32
+      ],
+      "id": "1ed33b96-6775-473d-9122-a4efab580ce9",
+      "name": "Reformat & Map"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Raw Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Raw Data": {
+      "main": [
+        [
+          {
+            "node": "Reformat & Map",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8a09199e-d45c-4676-b5bf-1e5647166052",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "MuZUPP2b8wC4gnOs",
+  "tags": []
+}
