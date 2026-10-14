@@ -1,0 +1,170 @@
+{
+  "name": "Split in Batches Assessment",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -48
+      ],
+      "id": "6908ee0f-8444-41b9-951f-48408519fe25",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { url: \"https://jsonplaceholder.typicode.com/posts/1\" } },\n  { json: { url: \"https://jsonplaceholder.typicode.com/posts/2\" } },\n  { json: { url: \"https://jsonplaceholder.typicode.com/posts/3\" } },\n  { json: { url: \"https://jsonplaceholder.typicode.com/posts/4\" } },\n  { json: { url: \"https://invalid.example.invalid/test\" } }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        -48
+      ],
+      "id": "0f6f87e3-c4c1-40cb-b9ce-6687171b1c1b",
+      "name": "Mock Items List"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        192
+      ],
+      "id": "abb8e509-0ace-47a0-9e33-cffa8d7420d2",
+      "placeholder": true
+    },
+    {
+      "parameters": {
+        "batchSize": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "e3531083-75e8-416a-8727-1ddb8de94146",
+      "name": "Split in Batches"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        80,
+        -64
+      ],
+      "id": "1df0f417-27df-49d0-9c68-1d2e89b94206",
+      "name": "Fetch Details",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "98e91483-27c4-4163-b295-96722591a1c3",
+              "name": "status",
+              "value": "All Batches Processed",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        304,
+        -64
+      ],
+      "id": "4ec5a878-d1e2-414f-a06f-a996a044df3c",
+      "name": "Compile Final List."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Mock Items List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock Items List": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Split in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split in Batches": {
+      "main": [
+        [
+          {
+            "node": "Fetch Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Details": {
+      "main": [
+        [
+          {
+            "node": "Compile Final List.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "309ad784-aba7-457e-971c-c5b0efa8da38",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "sbNnH6m7a22OfU8d",
+  "tags": []
+}
