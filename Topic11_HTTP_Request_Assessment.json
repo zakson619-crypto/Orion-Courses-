@@ -1,0 +1,147 @@
+{
+  "name": "Topic11_HTTP_Request_Assessment",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -32
+      ],
+      "id": "ee6ebcb0-d6f1-469b-9e62-ec2bc72b3a8f",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/users/1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -112,
+        -32
+      ],
+      "id": "9bb0e95d-93bf-4579-83fa-a50aac214fa7",
+      "name": "GET User Data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "385236e9-44d4-4fdb-9e87-305d01f4e52e",
+              "name": "title",
+              "value": "={{ 'Follow-up for ' + $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "30a46eff-d570-49a8-9edd-ca7fbada1e5b",
+              "name": "body",
+              "value": "={{ 'Contact ' + $json.name + ' at ' + $json.email + '. Source user ID: ' + $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f35b5b41-bd79-4260-bab3-2af9c8556c52",
+              "name": "userId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        112,
+        -32
+      ],
+      "id": "a0d14db0-7d73-4d47-bc46-61c8c91845d4",
+      "name": "Prepare POST Payload",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jsonplaceholder.typicode.com/posts",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.body }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        336,
+        -32
+      ],
+      "id": "6b30a65b-6fc8-4de6-88ac-69bf49c09bd3",
+      "name": "POST Create Resource",
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "GET User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET User Data": {
+      "main": [
+        [
+          {
+            "node": "Prepare POST Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare POST Payload": {
+      "main": [
+        [
+          {
+            "node": "POST Create Resource",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "98407e1a-e14a-4f8a-b12d-1f8de3285352",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "5Sm5t4yhHk7tVSQU",
+  "tags": []
+}
