@@ -1,0 +1,107 @@
+{
+  "name": "Topic 10 Gmail Integration Assessment",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "d42141bc-ac75-403e-9943-334dfe40287b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "61205e4b-ce01-47fc-9be3-123496ae6949",
+              "name": "customerName",
+              "value": "Jane Doe",
+              "type": "string"
+            },
+            {
+              "id": "6044faa8-1dd3-4ecc-8da6-40194a9eb01e",
+              "name": "customerEmail",
+              "value": "sayyadzakeersalman@gmail.com",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -48,
+        -16
+      ],
+      "id": "645879b5-3d95-4ac6-a4d1-5dcf4a9e1b57",
+      "name": "ock Customer Data"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customerEmail }}\n\n",
+        "subject": "=Welcome to N8N Course, {{ $json.customerName }}!",
+        "emailType": "text",
+        "message": "=Hello {{ $json.customerName }},  Welcome to the N8N Hands-On Beginner Course!  We are pleased to have you join us. This email was sent automatically using Gmail Integration in n8n as part of our workflow automation assessment.  We hope you enjoy learning and building automation workflows.  Best regards, Training Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        -16
+      ],
+      "id": "49fdbd8f-9d6f-413c-8aca-99fadfc2471a",
+      "name": "Send Personalized Email",
+      "webhookId": "19ed89db-6e6b-4144-810d-2f2c9c8a8f3f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8ZDKKwNBlUtqrlSg",
+          "name": "Gmail account 18"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "ock Customer Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ock Customer Data": {
+      "main": [
+        [
+          {
+            "node": "Send Personalized Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "568f3f74-0899-476c-985b-c35294570b03",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "IAzStbxyDq7BztNM",
+  "tags": []
+}
