@@ -1,0 +1,187 @@
+{
+  "name": "Topic13_IF_Node_Assessment",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        -48
+      ],
+      "id": "c91facc9-c2eb-406f-ad7d-887284c86309",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b40546da-8ba4-4ae4-ba5f-c4b7a03251b0",
+              "name": "orderId",
+              "value": "ORD001",
+              "type": "string"
+            },
+            {
+              "id": "5c18f220-cb5c-45b2-a045-bacf067e3c27",
+              "name": "customerName",
+              "value": "John",
+              "type": "string"
+            },
+            {
+              "id": "f9c9613b-ea81-41e9-b580-57aae2990518",
+              "name": "orderValue",
+              "value": 150,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -128,
+        -48
+      ],
+      "id": "841a7e67-7fe9-4e4c-baac-ce4f395ef225",
+      "name": "Mock Orders"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8a01929c-fcd4-463b-8311-3774fe4b2ae5",
+              "leftValue": "={{ $json.orderValue }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        96,
+        -48
+      ],
+      "id": "339d9c10-c681-4a71-ae7e-85198bb63e17",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7e89a22d-0dac-4ce2-a91f-85315e42e011",
+              "name": "status",
+              "value": "VIP",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        320,
+        -144
+      ],
+      "id": "1301489a-1f13-48e0-b0d7-dfe21c85d229",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "acce6528-0009-4139-b107-f68c55dffc11",
+              "name": "status",
+              "value": "Regular",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        320,
+        48
+      ],
+      "id": "93015e03-04dc-4c8b-9b5f-1ede1697d4a8",
+      "name": "Set Regular Status"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Mock Orders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock Orders": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Regular Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6949d673-3b0b-4503-ac92-4d01547b09e4",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "igEQUIatxENrigLy",
+  "tags": []
+}
