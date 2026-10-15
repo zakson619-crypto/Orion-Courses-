@@ -1,0 +1,284 @@
+{
+  "name": "Topic 1: Production Workflow Planning",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "=v1/transactions",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1088,
+        -144
+      ],
+      "id": "f5596832-85cd-4a42-9ff6-e332272e5e2a",
+      "name": "TRG_Receive_Transaction",
+      "webhookId": "20c0fc25-e6d1-4656-ad20-1f9545cbaa34",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mgEu4EiFNwtR9Vtw",
+          "name": "Header Auth account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const staticData = $getWorkflowStaticData('global');\n\nstaticData.processedTransactions =\n  staticData.processedTransactions || [];\n\nconst body = $input.item.json.body || $input.item.json;\nconst transactionId = String(body.transactionId || '').trim();\n\nif (!transactionId) {\n  return {\n    json: {\n      isDuplicate: false,\n      hasId: false,\n      payload: body,\n      errorMsg: 'Missing required transactionId'\n    }\n  };\n}\n\nconst isDuplicate =\n  staticData.processedTransactions.includes(transactionId);\n\nif (!isDuplicate) {\n  staticData.processedTransactions.push(transactionId);\n\n  if (staticData.processedTransactions.length > 500) {\n    staticData.processedTransactions.shift();\n  }\n}\n\nreturn {\n  json: {\n    transactionId,\n    isDuplicate,\n    hasId: true,\n    payload: body\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        -144
+      ],
+      "id": "de22aacb-b31c-401b-816f-07186aeb258b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b631d6b1-137d-4c6f-90cd-533bd76c6f44",
+              "leftValue": "={{ $json.isDuplicate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "19737661-ec1f-4f02-be9a-855783b8ea89",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -752,
+        -144
+      ],
+      "id": "7b593251-f0df-4673-aa45-a72d9a8544eb",
+      "name": "IF_IsNewTransaction."
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    event: \"TRANSACTION_BYPASSED\",\n    reason: \"Duplicate transactionId detected\",\n    transactionId: $json.transactionId,\n    timestamp: new Date().toISOString()\n  }\n};// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        -48
+      ],
+      "id": "bdf8cd1e-e995-4bf6-8416-9ba097f97f18",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload = $json.payload || {};\nconst errors = [];\n\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n\nif (\n  !payload.customerEmail ||\n  !emailRegex.test(payload.customerEmail)\n) {\n  errors.push(\"Invalid or missing 'customerEmail'\");\n}\n\nconst amount = Number(payload.amount);\n\nif (!Number.isFinite(amount) || amount <= 0) {\n  errors.push(\n    \"Field 'amount' must be a positive number greater than 0\"\n  );\n}\n\nconst currencyRegex = /^[A-Z]{3}$/;\n\nif (\n  !payload.currency ||\n  !currencyRegex.test(payload.currency)\n) {\n  errors.push(\n    \"Field 'currency' must be a valid 3-letter uppercase ISO code\"\n  );\n}\n\nconst isValid = errors.length === 0;\n\nreturn {\n  json: {\n    transactionId: $json.transactionId,\n    isValid,\n    validationErrors: errors,\n    sanitizedPayload: {\n      transactionId: $json.transactionId,\n      customerEmail: String(\n        payload.customerEmail || ''\n      ).toLowerCase().trim(),\n      amount,\n      currency: String(\n        payload.currency || ''\n      ).toUpperCase().trim(),\n      description:\n        payload.description || 'Standard Order Charge'\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -528,
+        -240
+      ],
+      "id": "c339b3ff-e100-4e37-8123-32839181fee1",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f39ad82b-9ca6-421e-983f-e7a4ce1b2f9a",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -304,
+        -240
+      ],
+      "id": "17927f7a-ef21-42c3-a608-fb2a94eec8c0",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  json: {\n    event: \"VALIDATION_FAILED\",\n    transactionId: $json.transactionId,\n    errors: $json.validationErrors,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -144
+      ],
+      "id": "96331000-7921-410c-801c-01ec26af1e99",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n  \"transactionId\": $json.sanitizedPayload.transactionId,\n  \"customerEmail\": $json.sanitizedPayload.customerEmail,\n  \"amount\": $json.sanitizedPayload.amount,\n  \"currency\": $json.sanitizedPayload.currency,\n  \"description\": $json.sanitizedPayload.description\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        -320
+      ],
+      "id": "d41e3b12-8dac-4d50-b767-fba8051fd5c7",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.item.json;\n\nreturn {\n  json: {\n    status: \"PROCESSED\",\n    chargeId: response.chargeId || \"ch_generated\",\n    transactionId:\n      $node[\"Code_ValidateSchema\"].json.sanitizedPayload.transactionId,\n    amountCharged: response.amount,\n    currency: response.currency,\n    completedAt: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -272
+      ],
+      "id": "e90565b1-e7f9-4a6f-94c3-a3776918d46e",
+      "name": "Code in JavaScript3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "TRG_Receive_Transaction": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "IF_IsNewTransaction.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF_IsNewTransaction.": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "783a5e20-39de-410a-857e-e76ce2975f81",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "opeaiPAKed3GgWE4",
+  "tags": []
+}

@@ -1,0 +1,61 @@
+{
+  "name": "Topic 1 - Centralized Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "d1155c8a-d796-4363-a982-6c25278679ec",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const errorData = $input.first().json;\nconst execution = errorData.execution || {};\nconst error = execution.error || {};\n\nreturn {\n  json: {\n    alertType: \"CRITICAL_PIPELINE_INCIDENT\",\n    workflowId: $workflow.id,\n    workflowName: $workflow.name,\n    failedNode: error.node?.name || \"Unknown Node\",\n    errorMessage: error.message || \"Unspecified execution failure\",\n    executionUrl: execution.url || \"\",\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "52f57f01-c598-422a-8b98-c735c1ae8421",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "071c1045-88b3-44fb-893e-d257388998f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "XzZfBiu5QyKx2JcG",
+  "tags": []
+}
