@@ -1,0 +1,351 @@
+{
+  "name": "N8N_PRJ_04_Health_Monitor",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        0
+      ],
+      "id": "d43be28b-2f2e-4036-916b-ad0963583981",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      name: \"Catalog API\",\n      url: \"https://dummyjson.com/products?limit=1\"\n    }\n  },\n  {\n    json: {\n      name: \"Auth Health Check\",\n      url: \"https://dummyjson.com/test\"\n    }\n  },\n  {\n    json: {\n      name: \"Payment Gateway\",\n      url: \"https://dummyjson.com/http/503\"\n    }\n  },\n  {\n    json: {\n      name: \"Legacy Portal\",\n      url: \"https://dummyjson.com/http/404\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        0
+      ],
+      "id": "d1ceb152-5d72-4407-8228-98695e86d5eb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "e7b002a7-3118-44a8-a200-07f94a986fbf",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        224,
+        224
+      ],
+      "id": "4297c42e-1f73-4128-8d46-c2686eaebcf4",
+      "placeholder": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\",\n  \"Accept\": \"application/json\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "bcb33547-0dc7-42fd-b376-f9dc218f10a7",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "sendTo": "zakson619@gmail.com",
+        "subject": "[INCIDENT] Service Failure Detected: {{ $json.Endpoint_URL }}",
+        "message": "=Critical Service Health Alert\n\nURGENT: Service outage detected\nAutomated monitoring has detected a service failure that requires investigation.\nIncident ID: {{ $json.Incident_ID }}\nEndpoint: {{ $json.Endpoint_URL }}\nHTTP Status Code: {{ $json.Status_Code }}\nError Details: {{ $json.Error_Message }}\nSeverity: {{ $json.Severity }}\nDetected At: {{ $json.Detected_At }}\nPlease investigate the endpoint and restore service as soon as possible.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        96
+      ],
+      "id": "5016e634-28d2-4e33-ba6f-85fde11bed69",
+      "name": "Send a message",
+      "webhookId": "58db44de-f9eb-446e-ad9b-aa1b0ad790f0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8ZDKKwNBlUtqrlSg",
+          "name": "Gmail account 18"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1uFFswuGOuIiq4XOBeyZBQfYqXRYFHcderqS9B2vpY2g",
+          "mode": "list",
+          "cachedResultName": "Service_Incident_Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uFFswuGOuIiq4XOBeyZBQfYqXRYFHcderqS9B2vpY2g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1uFFswuGOuIiq4XOBeyZBQfYqXRYFHcderqS9B2vpY2g/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Incident_ID": "=Incident_ID | {{ 'INC-' + $now.toFormat('yyyyMMdd') + '-' + Math.floor(1000 + Math.random() * 9000) }}",
+            "Endpoint_URL": "={{ $json.url }}",
+            "Status_Code": "={{ $json.statusCode }}",
+            "Error_Message": "={{ $json.error?.message || ('HTTP error ' + $json.statusCode) }}",
+            "Severity": "CRITICAL",
+            "Detected_At": "={{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Incident_ID",
+              "displayName": "Incident_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Endpoint_URL",
+              "displayName": "Endpoint_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status_Code",
+              "displayName": "Status_Code",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Error_Message",
+              "displayName": "Error_Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Severity",
+              "displayName": "Severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Detected_At",
+              "displayName": "Detected_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        160
+      ],
+      "id": "cf274f6f-70e8-4eb9-b7bd-483519728e82",
+      "name": "Append row in sheet",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "S1npLz6SDp2d2Zxa",
+          "name": "Salman Google Sheet"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "88ea2e58-aa89-42de-ae3c-ce7baa601b67",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": "200",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "55e127df-da0a-4694-8a21-ca0e4d851675",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        400,
+        -32
+      ],
+      "id": "f8a5afae-a5ea-4c72-9dfd-d3326e83a15a",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a7404a3f-cdac-4697-aef0-bce6aab51de5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "wMgdzhFblLHw6yvs",
+  "tags": []
+}
