@@ -1,0 +1,688 @@
+{
+  "name": "Workflow 1 — Candidate evaluation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "v1/recruitment/apply",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1392,
+        -48
+      ],
+      "id": "c6f72b91-2328-40c1-aa77-4c84ec58ed9d",
+      "name": "Webhook",
+      "webhookId": "64eaf946-1d84-4e17-8238-f1fb459c1125"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "35d4145a-7575-40fd-81fd-7522ab4e8cd7",
+              "leftValue": "Candidate name",
+              "rightValue": "={{ $json.body.body.candidateName }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9a4309ec-ca1b-45e8-b427-0debcc5dcf97",
+              "leftValue": "Candidate email",
+              "rightValue": "=\t{{ $json.body.body.candidateEmail }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e8f7fd40-c940-4e11-8916-583a707a1d74",
+              "leftValue": "Job ID",
+              "rightValue": "=\t{{ $json.body.body.jobId }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1184,
+        -48
+      ],
+      "id": "4d4eab1a-982b-4dab-87ed-acac65f109ec",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "resume",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -912,
+        -320
+      ],
+      "id": "da251403-1e8e-4867-ae0e-b071af924da4",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, email, full_name\nFROM public.candidates\nWHERE LOWER(email) = LOWER($1);",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').first().json.body.candidateEmail }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        -192,
+        -320
+      ],
+      "id": "f1164b80-c52f-4e00-8018-f894512a4f94",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "da4ff10e-5540-4317-b337-23a5d0e4153a",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        16,
+        -320
+      ],
+      "id": "bf8e90fc-8db4-4e4b-8674-04486eb1dc8c",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, email, full_name\nFROM public.candidates\nWHERE email = $1\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [$('Extract Candidate Details').first().json.email] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        288,
+        -336
+      ],
+      "id": "d8c233c9-55e3-4fa2-97bf-9ebcd7468633",
+      "name": "Get Existing Candidate",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.candidates (\n    email,\n    full_name,\n    phone_e164,\n    current_title,\n    total_experience_years,\n    linkedin_url\n)\nVALUES ($1, $2, $3, $4, $5, $6)\nRETURNING id, email, full_name, phone_e164,\n          current_title, total_experience_years, linkedin_url;",
+        "options": {
+          "queryReplacement": "={{ [\n  $('Extract Candidate Details').first().json.Email,\n  'Arjun Mehta',\n  $('Extract Candidate Details').first().json.Phone,\n  $('Extract Candidate Details').first().json['Current title'] || 'Software Engineer',\n  Number($('Extract Candidate Details').first().json['Total experience']),\n  $('Extract Candidate Details').first().json['LinkedIn URL']\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        176,
+        -80
+      ],
+      "id": "df7cc1ed-68d3-4921-aefb-9d54f7ec3ae1",
+      "name": "Insert New Candidate",
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT application_id, candidate_id, job_id, status\nFROM public.applications\nWHERE candidate_id = $1::uuid\n  AND job_id = $2\n  AND status IN (\n    'Pending Recruiter Review',\n    'PENDING_REVIEW',\n    'APPROVED',\n    'INTERVIEW_SCHEDULED'\n  )\nLIMIT 1;\n\n",
+        "options": {
+          "queryReplacement": "={{ ['a05fa2e7-960e-436c-966f-86e8e5cfd6bf', 'JOB-ENG-001'] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        464,
+        -336
+      ],
+      "id": "8490e302-b097-452e-8f2e-4875d1730472",
+      "name": "Check Existing Application",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT *\nFROM job_requisitions\nWHERE job_id = 'JOB-ENG-001'\n  AND is_active = TRUE\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        672,
+        -336
+      ],
+      "id": "eab41dfd-0b2f-474f-8ab5-12511237be91",
+      "name": "Get Job Requisition",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst ai = $('Message a model').first().json;\nconst jobOutput = $('Get Job Requisition').first().json;\n\n// Extract the resume JSON from common n8n AI output formats.\nfunction getAIContent(data) {\n  const candidates = [\n    data.output,\n    data.text,\n    data.content,\n    data.message?.content,\n    data.output?.[0]?.content?.[0]?.text,\n    data.content?.[0]?.text,\n  ];\n\n  for (const candidate of candidates) {\n    if (candidate && typeof candidate === 'object') {\n      if (\n        candidate.error &&\n        !candidate.fullName &&\n        !candidate.primarySkills\n      ) {\n        continue;\n      }\n\n      if (candidate.fullName || candidate.primarySkills) {\n        return candidate;\n      }\n\n      if (typeof candidate.text === 'object' && candidate.text !== null) {\n        if (!candidate.text.error) return candidate.text;\n      }\n    }\n\n    if (typeof candidate === 'string' && candidate.trim()) {\n      const cleaned = candidate\n        .replace(/^```(?:json)?\\s*/i, '')\n        .replace(/\\s*```$/, '')\n        .trim();\n\n      try {\n        const parsed = JSON.parse(cleaned);\n        if (parsed.fullName || parsed.primarySkills) return parsed;\n      } catch {}\n    }\n  }\n\n  // OpenAI Responses API output format.\n  if (Array.isArray(data.output)) {\n    for (const item of data.output) {\n      for (const part of item.content ?? []) {\n        if (part.type === 'output_text') {\n          if (typeof part.text === 'object' && part.text !== null) {\n            if (part.text.error) {\n              throw new Error(\n                `Resume parsing failed: ${part.text.error}`\n              );\n            }\n            return part.text;\n          }\n\n          if (typeof part.text === 'string') {\n            try {\n              return JSON.parse(part.text);\n            } catch {}\n          }\n        }\n      }\n    }\n  }\n\n  throw new Error(\n    'Could not parse resume JSON from Message a model. Check that node output.'\n  );\n}\n\nconst resume = getAIContent(ai);\n\n// The job query returns a single row from job_requisitions.\nconst job = jobOutput;\n\n// Validate that the node returned a job requisition.\nif (!job.job_id || !job.title) {\n  throw new Error(\n    'Get Job Requisition did not return a job record. Check its SQL query and output.'\n  );\n}\n\n// Read required skills from the actual database field.\nconst rawRequiredSkills =\n  job.required_skills ??\n  job.requiredSkills ??\n  job.skills ??\n  [];\n\nconst requiredSkills = Array.isArray(rawRequiredSkills)\n  ? rawRequiredSkills.map(s => String(s).trim()).filter(Boolean)\n  : String(rawRequiredSkills)\n      .split(/[,;\\n]/)\n      .map(s => s.trim())\n      .filter(Boolean);\n\n// Normalize skill names for comparison.\nconst normalize = value =>\n  String(value ?? '').toLowerCase().trim().replace(/\\s+/g, ' ');\n\nconst candidateSkills = Array.isArray(resume.primarySkills)\n  ? resume.primarySkills.map(s => String(s).trim()).filter(Boolean)\n  : [];\n\nconst skillsFound = requiredSkills.filter(required =>\n  candidateSkills.some(candidate =>\n    normalize(candidate) === normalize(required)\n  )\n);\n\nconst skillsMissing = requiredSkills.filter(required =>\n  !skillsFound.some(found => normalize(found) === normalize(required))\n);\n\n// Score based on required skills.\nconst matchScore = requiredSkills.length\n  ? Math.round((skillsFound.length / requiredSkills.length) * 100)\n  : 0;\n\n// Check minimum experience.\nconst minExperience = Number(\n  job.min_experience_years ?? job.minExperienceYears ?? 0\n);\n\nconst candidateExperience = Number(resume.totalExperienceYears ?? 0);\n\nconst experienceMeetsRequirement =\n  candidateExperience >= minExperience;\n\n// Recommendation is an assessment, not an automatic hiring decision.\nlet recommendation;\n\nif (!requiredSkills.length) {\n  recommendation = 'Needs Review';\n} else if (\n  matchScore >= 70 &&\n  experienceMeetsRequirement\n) {\n  recommendation = 'Strong Match';\n} else if (\n  matchScore >= 40 &&\n  experienceMeetsRequirement\n) {\n  recommendation = 'Potential Match';\n} else {\n  recommendation = 'Recruiter Review';\n}\n\nconst recommendationRationale =\n  `Evaluated for ${job.title} (${job.job_id}). ` +\n  `Matched ${skillsFound.length} of ${requiredSkills.length} required skills ` +\n  `(${matchScore}%). ` +\n  (skillsFound.length\n    ? `Skills found: ${skillsFound.join(', ')}. `\n    : 'No required skills matched. ') +\n  (skillsMissing.length\n    ? `Skills missing: ${skillsMissing.join(', ')}. `\n    : 'All listed required skills were found. ') +\n  `Candidate experience: ${candidateExperience} years; ` +\n  `minimum required: ${minExperience} years. ` +\n  (experienceMeetsRequirement\n    ? 'Experience requirement met. '\n    : 'Experience requirement not met. ') +\n  `Assessment: ${recommendation}. Recruiter review is required before any rejection or interview dispatch.`;\n\n// Return resume data plus evaluation results.\nreturn [\n  {\n    json: {\n      ...resume,\n      jobId: job.job_id,\n      jobTitle: job.title,\n      matchScore,\n      skillsFound,\n      skillsMissing,\n      minExperienceYears: minExperience,\n      experienceMeetsRequirement,\n      recommendation,\n      recommendationRationale,\n      jobRequisition: job,\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -336
+      ],
+      "id": "e70e4f7a-ac9b-4318-a5e5-c463631c3ee6",
+      "name": "Prepare Candidate Evaluation"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "custom-qwen-agent",
+          "mode": "list",
+          "cachedResultName": "CUSTOM-QWEN-AGENT"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a resume information extraction assistant.\n\nRead the resume text provided below and extract the candidate's information.\n\nReturn only a valid JSON object. Never create or attach files. Never return PDF links, Base64 data, Markdown, or explanations.\n\nRequired JSON format:\n{\n  \"fullName\": \"\",\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"totalExperienceYears\": 0,\n  \"primarySkills\": [],\n  \"education\": [],\n  \"workHistory\": []\n}\n\nIf information is missing, use an empty string, 0, or an empty array as appropriate. Do not invent details.\n\nRESUME TEXT:\n{{ $('Extract from File').first().json.text }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -512,
+        -320
+      ],
+      "id": "bd0f7e77-7857-43b2-ba51-8edf0b26bd65",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YyaCeBdVX6DjrFIM",
+          "name": "OpenAI account 14"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2ce51223-dcb1-42bc-abbc-189510382b7a",
+              "leftValue": "={{ $json.matchScore }}",
+              "rightValue": 40,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        -336
+      ],
+      "id": "2b3b372c-ce2e-451b-9054-6a733cdd9468",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO applications (\n    candidate_id,\n    job_id,\n    match_score,\n    skills_found,\n    skills_missing,\n    recommendation_rationale,\n    status,\n    recruiter_notes,\n    created_at\n)\nVALUES (\n    $1::uuid,\n    $2,\n    $3::integer,\n    $4::jsonb,\n    $5::jsonb,\n    $6,\n    'Pending Recruiter Review',\n    '',\n    NOW()\n)\nRETURNING *;",
+        "options": {
+          "queryReplacement": "={{ [\n  'a05fa2e7-960e-436c-966f-86e8e5cfd6bf',\n  'JOB-ENG-001',\n  50,\n  JSON.stringify(['Node.js', 'PostgreSQL', 'Docker']),\n  JSON.stringify(['n8n', 'REST APIs', 'AWS']),\n  'Potential Match - recruiter review required'\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1344,
+        -416
+      ],
+      "id": "2ab0d71c-3eb5-4908-a632-c88e4abcffac",
+      "name": "Insert Application",
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    application_id,\n    candidate_id,\n    job_id,\n    match_score,\n    status,\n    created_at\nFROM applications\nWHERE candidate_id = $1::uuid\n  AND job_id = $2\nORDER BY created_at DESC\nLIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ [   $('Get Existing Candidate').first().json.id,   $('Prepare Candidate Evaluation').first().json.jobId ] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1568,
+        -416
+      ],
+      "id": "70fe5b57-a144-4be5-baaf-788ef235b56b",
+      "name": "Verify Application",
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.applications (\n    candidate_id,\n    job_id,\n    match_score,\n    skills_found,\n    skills_missing,\n    recommendation_rationale,\n    status,\n    recruiter_notes,\n    created_at\n)\nVALUES (\n    $1::uuid,\n    $2,\n    $3::integer,\n    $4::jsonb,\n    $5::jsonb,\n    $6,\n    'Pending Recruiter Review',\n    '',\n    NOW()\n)\nRETURNING *;",
+        "options": {
+          "queryReplacement": "={{ [\n  $json.candidateId,\n  'JOB-ENG-001',\n  $json.matchScore ?? 0,\n  JSON.stringify($json.skillsFound ?? []),\n  JSON.stringify($json.skillsMissing ?? []),\n  $json.recommendationRationale ?? 'Pending recruiter review'\n] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.7,
+      "position": [
+        1344,
+        -240
+      ],
+      "id": "2fef58bb-2656-457a-97ea-ad151575e3bd",
+      "name": "Insert Low-Score Application",
+      "credentials": {
+        "postgres": {
+          "id": "PbjeXlykFi00a55s",
+          "name": "Postgres account 17"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "zakson619@gmail.com",
+        "subject": "Recruitment Workflow Test",
+        "message": "Testing n8n workflow configuration",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        -416
+      ],
+      "id": "53fe6932-9d7c-4810-8e02-bf1e315b3a47",
+      "name": "Send a message",
+      "webhookId": "a9cc982a-e7e3-4953-869d-a710bf55568a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8ZDKKwNBlUtqrlSg",
+          "name": "Gmail account 18"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "zakson619@gmail.com",
+        "subject": "Recruitment Workflow Test",
+        "emailType": "text",
+        "message": "\tTesting n8n workflow configuration",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        -240
+      ],
+      "id": "729eed6f-b971-46e2-85d4-0d7f33a75359",
+      "name": "Send a message1",
+      "webhookId": "2f53626c-21ba-444c-9966-1be9428fa97a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "8ZDKKwNBlUtqrlSg",
+          "name": "Gmail account 18"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d159772f-d476-40e1-89d9-ea9ee383f6ee",
+              "name": "Email",
+              "value": "={{ $('Extract from File').first().json.text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}/i)?.[0] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "5fd3bee8-daac-4947-b0a0-dcd0d73a19cf",
+              "name": "Phone",
+              "value": "={{ $('Extract from File').first().json.text.match(/(?:\\+?\\d[\\d\\s().-]{7,}\\d)/)?.[0]?.trim() || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "4df1f52f-8554-4d39-80d3-0f8d78bc2ec9",
+              "name": "Current title",
+              "value": "={{ $('Extract from File').first().json.text.split('\\n').map(s => s.trim()).find(s => /senior|software engineer|developer|architect|consultant|manager|analyst/i.test(s) && s.includes('|'))?.split('|')[0].trim() || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "79cf0388-d164-4461-9410-cb04ac7fe299",
+              "name": "Total experience",
+              "value": "={{ Number($('Extract from File').first().json.text.match(/(\\d+(?:\\.\\d+)?)\\s*\\+?\\s*years?\\s*(?:of\\s+(?:professional\\s+)?experience)?/i)?.[1] || 0) }}",
+              "type": "string"
+            },
+            {
+              "id": "4f7b578c-82ae-4400-936e-a51cd2e059cf",
+              "name": "LinkedIn URL",
+              "value": "={{ $('Extract from File').first().json.text.match(/(?:https?:\\/\\/)?(?:www\\.)?linkedin\\.com\\/in\\/[A-Z0-9_-]+\\/?/i)?.[0] || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -720,
+        -320
+      ],
+      "id": "f6ef75c1-fd1f-46c9-be9e-981fe44b6020",
+      "name": "Extract Candidate Details"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Extract Candidate Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Get Existing Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert New Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert New Candidate": {
+      "main": [
+        []
+      ]
+    },
+    "Get Existing Candidate": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Application": {
+      "main": [
+        [
+          {
+            "node": "Get Job Requisition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Job Requisition": {
+      "main": [
+        [
+          {
+            "node": "Prepare Candidate Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Candidate Evaluation": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Insert Application",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Low-Score Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Application": {
+      "main": [
+        [
+          {
+            "node": "Verify Application",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Application": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Low-Score Application": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Candidate Details": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert New Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c4fe0223-2f6c-4988-9914-ac7ece4f6e0b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "K2q3jZGWgyJV49y9",
+  "tags": []
+}
