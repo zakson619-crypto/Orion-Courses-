@@ -1,0 +1,208 @@
+{
+  "name": "Lesson 7 - Secure Webhook with HMAC Validation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lesson7-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "lesson7-webhook-0001",
+      "notes": "POST endpoint. Test URL: /webhook-test/lesson7-webhook | Production URL: /webhook/lesson7-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1000000-0000-4000-8000-000000000001",
+              "name": "headers",
+              "value": "={{ $json.headers }}",
+              "type": "object"
+            },
+            {
+              "id": "f1000000-0000-4000-8000-000000000002",
+              "name": "query",
+              "value": "={{ $json.query }}",
+              "type": "object"
+            },
+            {
+              "id": "f1000000-0000-4000-8000-000000000003",
+              "name": "body",
+              "value": "={{ $json.body }}",
+              "type": "object"
+            },
+            {
+              "id": "f1000000-0000-4000-8000-000000000004",
+              "name": "signatureHeader",
+              "value": "={{ $json.headers['x-signature'] || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f1000000-0000-4000-8000-000000000005",
+              "name": "receivedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Capture Headers, Query and Body",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ JSON.stringify($json.body) }}",
+        "dataPropertyName": "computedSignature",
+        "secret": "CHANGE_ME_SHARED_SECRET",
+        "encoding": "hex"
+      },
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Compute HMAC SHA256",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [480, 300],
+      "notes": "Replace the secret with your shared secret (use an n8n variable/credential in production)."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1000000-0000-4000-8000-000000000001",
+              "leftValue": "={{ $json.computedSignature }}",
+              "rightValue": "={{ $json.signatureHeader }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Signature Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"message\": \"Webhook received and signature verified\", \"receivedAt\": $json.receivedAt, \"query\": $json.query, \"body\": $json.body } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"error\", \"message\": \"Invalid or missing signature\" } }}",
+        "options": {
+          "responseCode": 401
+        }
+      },
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Respond 401 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 400]
+    },
+    {
+      "parameters": {
+        "content": "## Lesson 7 - Webhooks\n1. Webhook Trigger (POST /lesson7-webhook)\n2. Capture headers, query, body\n3. HMAC SHA256 over JSON body\n4. Compare with `x-signature` header\n5. 200 if valid, 401 if not\n\nTest URL: /webhook-test/lesson7-webhook\nProduction URL: /webhook/lesson7-webhook (workflow must be Active)",
+        "height": 260,
+        "width": 340
+      },
+      "id": "a1b2c3d4-0007-4000-8000-000000000007",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-20, 40]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Capture Headers, Query and Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Headers, Query and Body": {
+      "main": [
+        [
+          {
+            "node": "Compute HMAC SHA256",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute HMAC SHA256": {
+      "main": [
+        [
+          {
+            "node": "Signature Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Signature Valid?": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 401 Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {},
+  "tags": []
+}
