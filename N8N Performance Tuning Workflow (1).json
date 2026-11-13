@@ -1,0 +1,108 @@
+{
+  "name": "N8N Performance Tuning Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ab417422-0f44-494a-89bd-5aa734bee551",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/users/1",
+        "options": {}
+      },
+      "id": "2721019f-1b46-4925-94fa-7bec3fe0f977",
+      "name": "Fetch User 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -112,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/users/2",
+        "options": {}
+      },
+      "id": "6943a21b-b69c-4e20-bbbe-e1bbbafea10f",
+      "name": "Fetch User 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -112,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a6fd4ad8-84e9-4efa-aeb3-8b72c6b3af1e",
+      "name": "Merge User Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        176,
+        128
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch User 1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch User 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User 1": {
+      "main": [
+        [
+          {
+            "node": "Merge User Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch User 2": {
+      "main": [
+        [
+          {
+            "node": "Merge User Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "847ded6a-a1df-4d66-982e-d909fe302d80",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "m8t3KnmaJyLRFDDY",
+  "tags": []
+}
