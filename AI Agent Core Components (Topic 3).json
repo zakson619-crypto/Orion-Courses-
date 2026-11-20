@@ -1,0 +1,174 @@
+{
+  "name": "AI Agent Core Components (Topic 3)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "8465eda3-a7f7-4dad-83ca-96c18670533d",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        96
+      ],
+      "webhookId": "b2000000-0000-4000-8000-000000000001"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a math-capable customer assistant.\n\n## OPERATIONAL DIRECTIVES:\n* If the user's message contains a math problem, you MUST use the Calculator tool to solve it. Do not attempt mental math.\n* Pay attention to the memory context. Always address the user by their name if they shared it previously.\n* Answer the query and output only the values matching the JSON schema.\n* If the message has no math problem (e.g. a greeting or the user sharing their name), set resolved_math_value to 0 and calculation_steps to \"None\", and still fill user_feedback with a short friendly reply.\n* Always respond with a single valid JSON object matching the schema, with no extra text.",
+          "maxIterations": 5
+        }
+      },
+      "id": "5340a0a2-d3f9-4ac8-97e6-29cfc1d42422",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "id"
+        },
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0
+        }
+      },
+      "id": "58f72c91-62e6-4297-8261-cbbea65fa3e6",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        368
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YyaCeBdVX6DjrFIM",
+          "name": "OpenAI account 14"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "id": "3d99e4b9-80c4-4040-a5e3-9c755c6cb616",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        368
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "2029421b-99a3-4666-9971-dbea7610c544",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        752,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"resolved_math_value\": {\n      \"type\": \"number\",\n      \"description\": \"The final calculated number (integer or float). If the message has no math problem, output 0.\"\n    },\n    \"calculation_steps\": {\n      \"type\": \"string\",\n      \"description\": \"Briefly describe the calculations performed (e.g., \\\"15 - 3 + 5\\\"). If no math was needed, output \\\"None\\\".\"\n    },\n    \"user_feedback\": {\n      \"type\": \"string\",\n      \"description\": \"A short, friendly sentence addressing the user by their name (e.g., \\\"Here are your apples, John.\\\").\"\n    }\n  },\n  \"required\": [\n    \"user_feedback\"\n  ]\n}"
+      },
+      "id": "8e563a4e-486a-482b-9c68-0b3946dbe513",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        944,
+        368
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "70987737-617e-494c-b45f-654810c4e8f5",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "QLGvuYjEODnSnUcM",
+  "tags": []
+}
