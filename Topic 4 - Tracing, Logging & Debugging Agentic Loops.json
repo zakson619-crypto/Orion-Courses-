@@ -1,0 +1,211 @@
+{
+  "name": "Topic 4 - Tracing, Logging & Debugging Agentic Loops",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d67de80d-c043-456c-abb8-804d2ead8888",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        608
+      ],
+      "webhookId": "e2000000-0000-4000-8000-000000000011"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a technical search assistant. Your job is to fetch record details from the server database using your tool.",
+          "maxIterations": 3
+        }
+      },
+      "id": "ea827713-9ee9-4c80-bbb5-00af697f8ea3",
+      "name": "AI Agent (BROKEN - baseline)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        256
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "id"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "39609de7-0184-4e3c-827a-4f2898c61883",
+      "name": "OpenAI Chat Model (BROKEN - baseline)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1296,
+        528
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YyaCeBdVX6DjrFIM",
+          "name": "OpenAI account 14"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to retrieve records and status info from the primary server database.",
+        "url": "https://httpstat.us/500"
+      },
+      "id": "778fe108-78f7-4536-8566-b9dc75ebdf72",
+      "name": "server_query_tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a technical search assistant. Your job is to fetch record details from the server database using your tool.\n\n## ERROR HANDLING GUARDRAILS:\n* If a tool returns an error status code (such as a 500 Internal Server Error), you must NOT call that tool again.\n* Stop iterations immediately, report to the user that the server is currently experiencing downtime, and suggest checking back later.",
+          "maxIterations": 3
+        }
+      },
+      "id": "04fa8f5c-147f-4457-8e87-06abb91cea96",
+      "name": "AI Agent (FIXED - guardrails)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "id"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "27b39189-6385-4335-9ee1-76a4b3c345d0",
+      "name": "OpenAI Chat Model (FIXED - guardrails)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1296,
+        1216
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YyaCeBdVX6DjrFIM",
+          "name": "OpenAI account 14"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to retrieve records and status info from the primary server database.",
+        "url": "https://httpstat.us/500"
+      },
+      "id": "b35b8ffa-a4f4-412b-abad-e1ac2ffb2d32",
+      "name": "server_query_tool_fixed",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        1216
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model (BROKEN - baseline)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent (BROKEN - baseline)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "server_query_tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent (BROKEN - baseline)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model (FIXED - guardrails)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent (FIXED - guardrails)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "server_query_tool_fixed": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent (FIXED - guardrails)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent (BROKEN - baseline)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent (FIXED - guardrails)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c2ede1c8-9c13-4785-80e9-2932f95fa980",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "93KpdMqLote6jYbR",
+  "tags": []
+}
