@@ -1,0 +1,195 @@
+{
+  "name": "Topic 6 - Building Custom Tools via Workflow, Code, and API Nodes",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0f327c8a-4c99-4e0f-b755-a975dd523ecd",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "d1000000-0000-4000-8000-000000000001",
+      "notes": "Step 1: Chat trigger."
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a member profile support assistant.\n\n## OPERATIONAL DIRECTIVES:\n* If a user shares their customer ID, you must call the fetch_profile_tool to look up their name and company details.\n* If you need to calculate their age, retrieve the birthdate from conversation history and call calculate_age_tool.\n* Combine the outputs of the tools to answer the user's questions in a clear, polite summary."
+        }
+      },
+      "id": "315bf246-411b-4177-884b-fc94b7adfc8f",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        0
+      ],
+      "notes": "Steps 1 and 4: Agent with system message and guardrails."
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "d02d90a8-4717-4fde-95ef-e2ada0d639e2",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        272
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YyaCeBdVX6DjrFIM",
+          "name": "OpenAI account 14"
+        }
+      },
+      "notes": "Step 1: LLM, Temperature 0.0. If you switch to gpt-5, o1, o3 or o4, remove the Temperature option."
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "id": "24a8238a-1aeb-48a8-aeba-34bfbb60953d",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        272
+      ],
+      "notes": "Step 1: Memory so the agent can recall the birthdate from conversation history."
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to calculate a user's exact age from their birthdate string. The date input parameter must be formatted as YYYY-MM-DD.",
+        "jsCode": "// Parse the input date string\nconst birthDate = new Date(query.birthdate);\nconst today = new Date();\n\n// Calculate the difference in years\nlet age = today.getFullYear() - birthDate.getFullYear();\nconst monthDifference = today.getMonth() - birthDate.getMonth();\n\n// Adjust age if birth month/day has not occurred yet this year\nif (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {\n  age--;\n}\n\n// Return a clean text string for the agent observation\nreturn `Age calculated successfully: ${age} years old.`;",
+        "specifyInputSchema": true,
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"birthdate\": {\n      \"type\": \"string\",\n      \"description\": \"The date of birth in YYYY-MM-DD format (e.g., 1994-08-25).\"\n    }\n  },\n  \"required\": [\"birthdate\"]\n}"
+      },
+      "id": "f14544c1-9623-40e5-8e75-52de37ea2013",
+      "name": "calculate_age_tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        272
+      ],
+      "notes": "Step 2: Custom JavaScript Code Tool. Inputs are read from query.birthdate (the guide's $input.birthdate does not work in the Code Tool)."
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to retrieve a customer's contact details, name, and company from the remote database using their unique customer ID.",
+        "url": "=https://jsonplaceholder.typicode.com/users/{customer_id}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "customer_id",
+              "description": "The numeric customer ID (e.g. 1, 2, or 3) to look up in the CRM database.",
+              "type": "number"
+            }
+          ]
+        },
+        "optimizeResponse": true,
+        "fieldsToInclude": "selected",
+        "fields": "name,email,company"
+      },
+      "id": "da36042a-0202-4686-9cea-fe978ac5a708",
+      "name": "fetch_profile_tool",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        272
+      ],
+      "notes": "Step 3: HTTP API Tool (GET). customer_id is a required placeholder. Response is trimmed to name, email and company so the agent can write the summary."
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "calculate_age_tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetch_profile_tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3e0af389-9eeb-467c-8ed5-b679b53114cd",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "oQ4X1lBnDQ12d3MY",
+  "tags": []
+}
