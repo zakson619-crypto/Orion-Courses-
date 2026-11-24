@@ -1,0 +1,152 @@
+{
+  "name": "Topic 7 - Self-Correcting AI Agent (v3)",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bea717ed-882b-4707-a5c1-1cc7b1af1561",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        224
+      ],
+      "webhookId": "9a1c2b9e-1111-4222-8333-444455556666"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={\n  \"json_data\": \"{\\\"order_id\\\":102,\\\"price\\\":500}\",\n  \"reflection_loops\": 2,\n  \"validation_status\": \"Passed\"\n}",
+        "options": {
+          "systemMessage": "You are a data processing assistant. Your job is to summarize order details into a clean JSON string containing keys 'order_id' and 'price'.\n\n## OPERATIONAL STEPS:\n1. First, generate a draft JSON string based on the user's order details.\n2. Before outputting your answer, call the schema_validator tool passing your draft JSON in the draft_string field. Keep a count of how many times you call it.\n3. If the tool outputs \"Validation Failed\", read the error details, write a critique identifying the error, correct your JSON draft, and validate it again.\n4. Once the validator outputs \"Validation Passed\" (or you run out of iterations), give your final answer.\n\n## FINAL ANSWER FORMAT:\nReply with ONLY a raw JSON object (no markdown, no code fences, no extra text) with exactly these keys:\n- json_data: the validated JSON string\n- reflection_loops: number of times you called schema_validator\n- validation_status: 'Passed' if the validator returned success, otherwise 'Failed'",
+          "maxIterations": 8
+        }
+      },
+      "id": "20702d06-c168-45d9-b14a-58effb32660a",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        704,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "f7a0d628-af20-4868-8f2d-39f53b7b27ca",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        464
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YyaCeBdVX6DjrFIM",
+          "name": "OpenAI account 14"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to validate that your generated draft text is a valid JSON block containing required keys 'order_id' and 'price'. Pass the draft in the draft_string field.",
+        "jsCode": "try {\n  let raw = query;\n  if (raw && typeof raw === 'object') {\n    raw = raw.draft_string !== undefined ? raw.draft_string : JSON.stringify(raw);\n  }\n  raw = String(raw);\n\n  const parsed = JSON.parse(raw);\n\n  if (parsed === null || typeof parsed !== 'object' || parsed.order_id === undefined || parsed.price === undefined) {\n    return \"Validation Failed: Missing required keys 'order_id' or 'price'.\";\n  }\n  return \"Validation Passed: JSON is valid and complete.\";\n} catch (err) {\n  return \"Validation Failed: Invalid JSON syntax. Error details: \" + err.message + \". Ensure all keys and strings are wrapped in double quotes.\";\n}",
+        "specifyInputSchema": true,
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"draft_string\": {\n      \"type\": \"string\",\n      \"description\": \"The raw JSON string you want to validate.\"\n    }\n  },\n  \"required\": [\"draft_string\"]\n}"
+      },
+      "id": "f97611e1-ba55-4855-bbc6-656d12a943ad",
+      "name": "schema_validator",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const out = $input.first().json.output;\nlet data;\ntry {\n  data = typeof out === 'string'\n    ? JSON.parse(out.replace(/```json|```/g, '').trim())\n    : out;\n} catch (e) {\n  data = {\n    json_data: String(out),\n    reflection_loops: null,\n    validation_status: 'Failed'\n  };\n}\nreturn [{ json: {\n  json_data: data.json_data,\n  reflection_loops: data.reflection_loops,\n  validation_status: data.validation_status\n} }];"
+      },
+      "id": "926a3e99-d997-4e1a-98ef-9a86cc03ce5a",
+      "name": "Parse Final Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        224
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "schema_validator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6598a2d7-1192-4572-9e47-04d28823a0e3",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "8bX6EBLmaNs26IPm",
+  "tags": []
+}
