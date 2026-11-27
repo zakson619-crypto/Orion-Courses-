@@ -1,0 +1,272 @@
+{
+  "name": "HITL_Safety_Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a careful customer-offer drafting assistant. Draft a proposed offer only. Never send, dispatch, redeem, or execute a discount, refund, payment, or other transaction. Clearly label your response as a DRAFT and include the customer identifier and proposed offer. The workflow will pause for human review. Do not answer unrelated requests."
+        }
+      },
+      "id": "aaac9b1f-043b-4f24-87ad-b02d84ff2d2d",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1024,
+        128
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "maxTokens": 400,
+          "temperature": 0
+        }
+      },
+      "id": "ee944cbc-ee55-4d3c-ae08-0c6a489911d3",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        368
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YyaCeBdVX6DjrFIM",
+          "name": "OpenAI account 14"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Manager approval required",
+        "formDescription": "Review the AI-generated draft. Approval does not automatically dispatch a real discount; connect your approved business action after testing.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Approve transaction?",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {}
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Reviewer Comments",
+              "fieldType": "textarea"
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "14adb6ad-40ea-4bb4-a9f5-ababbf9e09a1",
+      "name": "Wait for Manager Approval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -496,
+        128
+      ],
+      "webhookId": "f21dc1d1-87af-41c8-b50c-18f416adf411"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3ba31d29-98f3-4ddd-b4fa-738eaca8a847",
+              "leftValue": "={{ $json.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "99598948-e367-4010-9e2f-a7b26aadbfeb",
+      "name": "Approval Decision",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        128
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7070855f-bce5-49b0-8353-b69c1af78e96",
+      "name": "Approved - Confirmation Placeholder",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "notes": "Connect the real discount/refund dispatch node here only after testing and approval. This template does not execute a transaction."
+    },
+    {
+      "parameters": {},
+      "id": "c7588054-7114-43cb-a2e9-9e8593bdfead",
+      "name": "Rejected - No Action",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        240
+      ],
+      "notes": "Rejected branch. No transaction is executed. Reviewer comments are available in the incoming item."
+    },
+    {
+      "parameters": {},
+      "id": "4c5c0f9b-f908-48d6-9ee2-33a014dca4d8",
+      "name": "Agent Error Output",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -768,
+        368
+      ],
+      "notes": "Optional local error handling placeholder. Configure Global_Error_Handler in workflow settings for error notifications."
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        144,
+        144
+      ],
+      "id": "60cccba5-267e-4835-9f17-6d0a477aeb5e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "path": "7fa00a3f-f843-42d6-8c7e-3eb3e9a4eb73",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1312,
+        128
+      ],
+      "id": "db960455-dca8-47a6-8184-00b6ea0d0b10",
+      "name": "Webhook",
+      "webhookId": "7fa00a3f-f843-42d6-8c7e-3eb3e9a4eb73"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Wait for Manager Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Agent Error Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Manager Approval": {
+      "main": [
+        [
+          {
+            "node": "Approval Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approval Decision": {
+      "main": [
+        [
+          {
+            "node": "Approved - Confirmation Placeholder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rejected - No Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "bd64608a-e092-435d-bd29-18ee1b68d6cb",
+  "meta": {
+    "instanceId": "a03c7678428ef19ededbf912f16f7d5798ec7b9ab4c17f2a2def6a9e791e7215"
+  },
+  "nodeGroups": [],
+  "id": "eRHck2t4CRAqWqUr",
+  "tags": []
+}
